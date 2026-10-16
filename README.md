@@ -1,0 +1,1 @@
+# JuntaDeVecinos_Semestral_Grupo10
