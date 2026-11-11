@@ -1,26 +1,22 @@
 package com.example.juntavecinos.repository
 
+import com.example.juntavecinos.model.Reserva
 import com.example.juntavecinos.model.ReservaDao
-import com.example.juntavecinos.model.ReservaEntity
 import kotlinx.coroutines.flow.Flow
 
 class ReservaRepository(private val reservaDao: ReservaDao) {
 
-    val todasLasReservas: Flow<List<ReservaEntity>> = reservaDao.obtenerTodasLasReservas()
+    val todasLasReservas: Flow<List<Reserva>> = reservaDao.obtenerTodasLasReservas()
 
-    fun obtenerReservasPorEstado(estado: String): Flow<List<ReservaEntity>> {
-        return reservaDao.obtenerReservasPorEstado(estado)
-    }
-
-    suspend fun insertarReserva(reserva: ReservaEntity) {
+    suspend fun insertarReserva(reserva: Reserva) {
         reservaDao.insertarReserva(reserva)
     }
 
-    suspend fun actualizarReserva(reserva: ReservaEntity) {
+    suspend fun actualizarReserva(reserva: Reserva) {
         reservaDao.actualizarReserva(reserva)
     }
 
-    suspend fun eliminarReserva(reserva: ReservaEntity) {
+    suspend fun eliminarReserva(reserva: Reserva) {
         reservaDao.eliminarReserva(reserva)
     }
 }
