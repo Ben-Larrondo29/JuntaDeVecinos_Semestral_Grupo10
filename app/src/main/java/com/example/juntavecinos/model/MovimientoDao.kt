@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MovimientoDao {
     @Query("SELECT * FROM movimientos_financieros ORDER BY id DESC")
-    fun obtenerTodosLosMovimientos(): Flow<List<MovimientoEntity>>
+    fun obtenerTodosLosMovimientos(): Flow<List<Movimiento>>
 
     @Query("SELECT SUM(monto) FROM movimientos_financieros WHERE tipo = 'INGRESO'")
     fun obtenerTotalIngresos(): Flow<Double?>
@@ -15,5 +15,5 @@ interface MovimientoDao {
     fun obtenerTotalGastos(): Flow<Double?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertarMovimiento(movimiento: MovimientoEntity)
+    suspend fun insertarMovimiento(movimiento: Movimiento)
 }

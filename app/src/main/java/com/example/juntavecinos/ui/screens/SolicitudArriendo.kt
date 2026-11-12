@@ -1,5 +1,6 @@
 package com.example.juntavecinos.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,20 +10,29 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.juntavecinos.ui.theme.MoradoOscuro
+import com.example.juntavecinos.ui.theme.MoradoPrincipal
+import com.example.juntavecinos.ui.theme.TopBarColor
 import com.example.juntavecinos.viewmodel.ReservaViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SolicitudArriendo(
     navController: NavController,
-    viewModel: ReservaViewModel
+    reservaViewModel: ReservaViewModel
 ) {
-    val estado by viewModel.estadoFormulario.collectAsState()
+    val estado by reservaViewModel.estadoFormulario.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("SOLICITUD DE ARRIENDO") }) }
+        topBar = {
+            TopBarColor(
+                titulo = "Solicitar Arriendo",
+                mostrarVolver = true,
+                alVolver = { navController.popBackStack() }
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -32,68 +42,103 @@ fun SolicitudArriendo(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text(
+                text = "Datos de la Solicitud",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MoradoOscuro
+            )
+
             OutlinedTextField(
                 value = estado.nombreVecino,
-                onValueChange = viewModel::alCambiarNombre,
-                label = { Text("Nombre Completo:") },
+                onValueChange = reservaViewModel::alCambiarNombre,
+                label = { Text("Nombre del Vecino/a *") },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = estado.rutVecino,
-                onValueChange = viewModel::alCambiarRut,
-                label = { Text("RUT del Vecino/a:") },
+                onValueChange = reservaViewModel::alCambiarRut,
+                label = { Text("RUT") },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = estado.fecha,
-                onValueChange = viewModel::alCambiarFecha,
-                label = { Text("Fecha:") },
+                onValueChange = reservaViewModel::alCambiarFecha,
+                label = { Text("Fecha (DD/MM/AAAA) *") },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = estado.horaInicio,
-                    onValueChange = viewModel::alCambiarHoraInicio,
-                    label = { Text("Hora Inicio:") },
+                    onValueChange = reservaViewModel::alCambiarHoraInicio,
+                    label = { Text("Hora Inicio") },
+                    singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
+
                 OutlinedTextField(
                     value = estado.horaFin,
-                    onValueChange = viewModel::alCambiarHoraFin,
-                    label = { Text("Hora Fin:") },
+                    onValueChange = reservaViewModel::alCambiarHoraFin,
+                    label = { Text("Hora Fin") },
+                    singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
             }
 
             OutlinedTextField(
                 value = estado.motivo,
-                onValueChange = viewModel::alCambiarMotivo,
-                label = { Text("Motivo / Evento:") },
+                onValueChange = reservaViewModel::alCambiarMotivo,
+                label = { Text("Motivo del evento") },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        reservaViewModel.alCambiarAceptaReglamento(!estado.aceptaReglamento)
+                    }
+            ) {
                 Checkbox(
                     checked = estado.aceptaReglamento,
-                    onCheckedChange = viewModel::alCambiarAceptaReglamento
+                    onCheckedChange = reservaViewModel::alCambiarAceptaReglamento,
+                    colors = CheckboxDefaults.colors(checkedColor = MoradoPrincipal)
                 )
-                Text("Acepto el reglamento de uso de la sede")
+                Text(
+                    text = "Acepto el reglamento de uso de la sede vecinal *",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             estado.errorMensaje?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
-                    viewModel.guardarReserva {
+                    reservaViewModel.guardarReserva {
                         navController.popBackStack()
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
                 Text("Enviar Solicitud")
             }

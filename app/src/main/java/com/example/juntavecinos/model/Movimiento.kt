@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "movimientos_financieros")
-data class MovimientoEntity(
+data class Movimiento(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val tipo: String,
