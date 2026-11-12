@@ -21,6 +21,7 @@ import com.example.juntavecinos.viewmodel.MovimientoViewModel
 import com.example.juntavecinos.viewmodel.ReservaViewModel
 import com.example.juntavecinos.viewmodel.VecinoViewModel
 import com.example.juntavecinos.viewmodel.ViewModelFactory
+import com.example.juntavecinos.ui.screens.AvisosScreen
 
 @Composable
 fun AppNavigation() {
@@ -65,6 +66,9 @@ fun AppNavigation() {
         }
         composable("ingresos") {
             Ingresos(navController, movimientoViewModel)
+        }
+        composable("avisos") {
+            AvisosScreen(navController)
         }
 
     }

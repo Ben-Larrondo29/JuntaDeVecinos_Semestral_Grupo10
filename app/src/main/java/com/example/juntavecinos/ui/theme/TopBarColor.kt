@@ -13,6 +13,7 @@ fun TopBarColor(
     titulo: String,
     mostrarVolver: Boolean = false,
     alVolver: () -> Unit = {},
+    iconoNavegacion: (@Composable () -> Unit)? = null,
     acciones: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
@@ -23,12 +24,15 @@ fun TopBarColor(
             )
         },
         navigationIcon = {
-            if (mostrarVolver) {
-                IconButton(onClick = alVolver) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver"
-                    )
+            when {
+                iconoNavegacion != null -> iconoNavegacion()
+                mostrarVolver -> {
+                    IconButton(onClick = alVolver) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver"
+                        )
+                    }
                 }
             }
         },
