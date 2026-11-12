@@ -16,6 +16,12 @@ import com.example.juntavecinos.ui.theme.MoradoPrincipal
 import com.example.juntavecinos.ui.theme.TopBarColor
 import com.example.juntavecinos.viewmodel.LoginViewModel
 import com.example.juntavecinos.viewmodel.RolUsuario
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.example.juntavecinos.R
+
 
 @Composable
 fun LoginScreen(
@@ -26,7 +32,7 @@ fun LoginScreen(
 
     Scaffold(
         topBar = {
-            TopBarColor(titulo = "Junta de Vecinos Zaror")
+            TopBarColor(titulo = "")
         }
     ) { innerPadding ->
         Column(
@@ -37,11 +43,26 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+
+            Image(
+                painter = painterResource(id = R.drawable.logo_juntavecinos_morado),
+                contentDescription = "Logo Junta de Vecinos",
+                modifier = Modifier
+                    .size(130.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+
             Text(
-                text = "Iniciar Sesión",
+                text = "Iniciar Sesión\nJunta de vecinos Zaror\nLos Cerrillos",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MoradoOscuro
+                color = MoradoOscuro,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
