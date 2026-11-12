@@ -5,8 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,57 +20,16 @@ import com.example.juntavecinos.ui.theme.MoradoOscuro
 import com.example.juntavecinos.ui.theme.MoradoPrincipal
 import com.example.juntavecinos.ui.theme.MoradoSecundario
 import com.example.juntavecinos.ui.theme.TopBarColor
-
-private data class AvisoVecinal(
-    val id: Int,
-    val titulo: String,
-    val categoria: String,
-    val fecha: String,
-    val descripcion: String,
-    val importante: Boolean = false
-)
+import com.example.juntavecinos.viewmodel.AvisoViewModel
 
 @Composable
 fun AvisosScreen(
-    navController: NavController
+    navController: NavController,
+    avisoViewModel: AvisoViewModel
 ) {
     val categorias = listOf("Todos", "Reuniones", "Comunidad", "Seguridad")
     var categoriaSeleccionada by remember { mutableStateOf("Todos") }
-
-    val avisos = remember {
-        listOf(
-            AvisoVecinal(
-                id = 1,
-                titulo = "Asamblea General Ordinaria",
-                categoria = "Reuniones",
-                fecha = "15/11/2026 • 19:00 hrs",
-                descripcion = "Se convoca a todos los socios y vecinos de Población Zaror a la reunión mensual en la sede vecinal. Se revisará el balance de tesorería y proyectos comunitarios.",
-                importante = true
-            ),
-            AvisoVecinal(
-                id = 2,
-                titulo = "Operativo de Limpieza y Áreas Verdes",
-                categoria = "Comunidad",
-                fecha = "18/11/2026 • 10:00 hrs",
-                descripcion = "Jornada comunitaria de limpieza en la plaza central del sector. Contaremos con batea municipal para retiro de cachureos hasta las 14:00 hrs."
-            ),
-            AvisoVecinal(
-                id = 3,
-                titulo = "Actualización de Alarmas Comunitarias",
-                categoria = "Seguridad",
-                fecha = "10/11/2026",
-                descripcion = "Recordamos a los vecinos mantener actualizados sus números de contacto en el padrón de la directiva para el sistema de alerta vecinal.",
-                importante = true
-            ),
-            AvisoVecinal(
-                id = 4,
-                titulo = "Horarios de Arriendo de Sede",
-                categoria = "Comunidad",
-                fecha = "05/11/2026",
-                descripcion = "Las solicitudes de arriendo deben enviarse con al menos 5 días de anticipación desde la aplicación, aceptando el reglamento vigente."
-            )
-        )
-    }
+    val avisos by avisoViewModel.todosLosAvisos.collectAsState(initial = emptyList())
 
     val avisosFiltrados = if (categoriaSeleccionada == "Todos") {
         avisos
@@ -94,7 +53,6 @@ fun AvisosScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Encabezado informativo
             Card(
                 colors = CardDefaults.cardColors(containerColor = MoradoFondoSuave),
                 modifier = Modifier.fillMaxWidth()
@@ -105,7 +63,7 @@ fun AvisosScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Campaign,
+                        imageVector = Icons.Default.Notifications,
                         contentDescription = null,
                         tint = MoradoPrincipal,
                         modifier = Modifier.size(32.dp)
@@ -126,7 +84,6 @@ fun AvisosScreen(
                 }
             }
 
-            // Filtros por categoría
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -144,84 +101,96 @@ fun AvisosScreen(
                 }
             }
 
-            // Listado de avisos
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(avisosFiltrados) { aviso ->
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (aviso.importante) MoradoFondoSuave else Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+            if (avisosFiltrados.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay avisos publicados en esta categoría.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(avisosFiltrados) { aviso ->
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (aviso.importante) MoradoFondoSuave else Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Surface(
-                                    color = MoradoSecundario,
-                                    shape = MaterialTheme.shapes.small
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = aviso.categoria,
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
+                                    Surface(
+                                        color = MoradoSecundario,
+                                        shape = MaterialTheme.shapes.small
+                                    ) {
+                                        Text(
+                                            text = aviso.categoria,
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+
+                                    if (aviso.importante) {
+                                        Text(
+                                            text = "★ Importante",
+                                            color = MoradoPrincipal,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
 
-                                if (aviso.importante) {
-                                    Text(
-                                        text = "★ Importante",
-                                        color = MoradoPrincipal,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            Text(
-                                text = aviso.titulo,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MoradoOscuro
-                            )
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = null,
-                                    tint = MoradoPrincipal,
-                                    modifier = Modifier.size(16.dp)
-                                )
                                 Text(
-                                    text = aviso.fecha,
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = aviso.titulo,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
                                     color = MoradoOscuro
                                 )
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DateRange,
+                                        contentDescription = null,
+                                        tint = MoradoPrincipal,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = aviso.fecha,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MoradoOscuro
+                                    )
+                                }
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    color = MoradoPrincipal.copy(alpha = 0.2f)
+                                )
+
+                                Text(
+                                    text = aviso.descripcion,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.DarkGray
+                                )
                             }
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 4.dp),
-                                color = MoradoPrincipal.copy(alpha = 0.2f)
-                            )
-
-                            Text(
-                                text = aviso.descripcion,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.DarkGray
-                            )
                         }
                     }
                 }
