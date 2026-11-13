@@ -2,8 +2,8 @@ package com.example.juntavecinos.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.juntavecinos.model.Administrador
 import com.example.juntavecinos.repository.AdminRepository
+import com.example.juntavecinos.repository.VecinoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,97 +17,107 @@ enum class RolUsuario {
 }
 
 data class LoginUiState(
-    val rolSeleccionado: RolUsuario = RolUsuario.VECINO,
-    val rutVecino: String = "",
-    val nombreVecino: String = "",
-    val usuarioAdmin: String = "",
-    val claveAdmin: String = "",
     val rolActivo: RolUsuario = RolUsuario.NINGUNO,
-    val adminActivo: Administrador? = null,
+    val nombreVecino: String = "",
+    val rutVecino: String = "",
     val errorMensaje: String? = null
 )
 
+@Suppress("UNUSED_PARAMETER")
 class LoginViewModel(
-    private val administradorRepository: AdminRepository
+    private val vecinoRepository: VecinoRepository,
+    private val adminRepository: AdminRepository
 ) : ViewModel() {
 
-    private val EstadoLogin = MutableStateFlow(LoginUiState())
-    val estadoLogin: StateFlow<LoginUiState> = EstadoLogin.asStateFlow()
+    private val _estadoLogin = MutableStateFlow(LoginUiState())
+    val estadoLogin: StateFlow<LoginUiState> = _estadoLogin.asStateFlow()
 
-    init {
+    fun limpiarError() {
+        _estadoLogin.update { it.copy(errorMensaje = null) }
+    }
+
+    fun iniciarSesionVecino(
+        rut: String,
+        nombre: String = "",
+        alExito: () -> Unit
+    ) {
+        if (rut.isBlank()) {
+            _estadoLogin.update {
+                it.copy(errorMensaje = "Ingresa tu RUT para continuar.")
+            }
+            return
+        }
+
         viewModelScope.launch {
-            administradorRepository.asegurarAdminPorDefecto()
-        }
-    }
+            val vecinoRegistrado = vecinoRepository.buscarVecinoEnSistema(rut)
 
-    fun alSeleccionarTipoLogin(rol: RolUsuario) {
-        EstadoLogin.update {
-            it.copy(rolSeleccionado = rol, errorMensaje = null)
-        }
-    }
-
-    fun alCambiarRut(nuevoRut: String) {
-        EstadoLogin.update { it.copy(rutVecino = nuevoRut, errorMensaje = null) }
-    }
-
-    fun alCambiarNombre(nuevoNombre: String) {
-        EstadoLogin.update { it.copy(nombreVecino = nuevoNombre, errorMensaje = null) }
-    }
-
-    fun alCambiarUsuarioAdmin(nuevoUsuario: String) {
-        EstadoLogin.update { it.copy(usuarioAdmin = nuevoUsuario, errorMensaje = null) }
-    }
-
-    fun alCambiarClaveAdmin(nuevaClave: String) {
-        EstadoLogin.update { it.copy(claveAdmin = nuevaClave, errorMensaje = null) }
-    }
-
-    fun iniciarSesion(alExito: () -> Unit) {
-        val actual = EstadoLogin.value
-
-        if (actual.rolSeleccionado == RolUsuario.VECINO) {
-            if (actual.rutVecino.isBlank() || actual.nombreVecino.isBlank()) {
-                EstadoLogin.update {
-                    it.copy(errorMensaje = "Ingresa tu nombre y RUT para continuar.")
+            if (vecinoRegistrado == null) {
+                _estadoLogin.update {
+                    it.copy(
+                        rolActivo = RolUsuario.NINGUNO,
+                        errorMensaje = "Acceso denegado: este RUT no se encuentra registrado en la Población Zaror."
+                    )
                 }
-                return
-            }
-            EstadoLogin.update {
-                it.copy(rolActivo = RolUsuario.VECINO, adminActivo = null, errorMensaje = null)
-            }
-            alExito()
-        } else if (actual.rolSeleccionado == RolUsuario.ADMINISTRADOR) {
-            if (actual.usuarioAdmin.isBlank() || actual.claveAdmin.isBlank()) {
-                EstadoLogin.update {
-                    it.copy(errorMensaje = "Ingresa usuario y contraseña.")
-                }
-                return
-            }
-
-            viewModelScope.launch {
-                val adminEncontrado = administradorRepository.autenticar(
-                    usuario = actual.usuarioAdmin.trim(),
-                    clave = actual.claveAdmin.trim()
-                )
-                if (adminEncontrado != null) {
-                    EstadoLogin.update {
+            } else {
+                if (nombre.isNotBlank() &&
+                    !vecinoRegistrado.nombre.contains(nombre.trim(), ignoreCase = true)
+                ) {
+                    _estadoLogin.update {
                         it.copy(
-                            rolActivo = RolUsuario.ADMINISTRADOR,
-                            adminActivo = adminEncontrado,
-                            errorMensaje = null
+                            rolActivo = RolUsuario.NINGUNO,
+                            errorMensaje = "El nombre ingresado no coincide con el RUT registrado."
                         )
                     }
-                    alExito()
-                } else {
-                    EstadoLogin.update {
-                        it.copy(errorMensaje = "Credenciales de administrador inválidas.")
-                    }
+                    return@launch
+                }
+
+                _estadoLogin.update {
+                    it.copy(
+                        rolActivo = RolUsuario.VECINO,
+                        nombreVecino = vecinoRegistrado.nombre,
+                        rutVecino = vecinoRegistrado.rut,
+                        errorMensaje = null
+                    )
+                }
+                alExito()
+            }
+        }
+    }
+
+    fun iniciarSesionAdmin(
+        usuario: String,
+        clave: String,
+        alExito: () -> Unit
+    ) {
+        if (usuario.isBlank() || clave.isBlank()) {
+            _estadoLogin.update {
+                it.copy(errorMensaje = "Completa usuario y contraseña de administrador.")
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            val esValido = usuario.trim() == "admin" && clave.trim() == "1234"
+
+            if (esValido) {
+                _estadoLogin.update {
+                    it.copy(
+                        rolActivo = RolUsuario.ADMINISTRADOR,
+                        nombreVecino = "Directiva",
+                        rutVecino = "",
+                        errorMensaje = null
+                    )
+                }
+                alExito()
+            } else {
+                _estadoLogin.update {
+                    it.copy(errorMensaje = "Credenciales de administrador incorrectas.")
                 }
             }
         }
     }
 
     fun cerrarSesion() {
-        EstadoLogin.value = LoginUiState()
+        _estadoLogin.value = LoginUiState()
     }
 }

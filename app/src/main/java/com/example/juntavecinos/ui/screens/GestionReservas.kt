@@ -26,7 +26,7 @@ fun GestionReservasScreen(
     Scaffold(
         topBar = {
             TopBarColor(
-                titulo = "Gestión de Reservas",
+                titulo = "Gestión de Arriendos",
                 mostrarVolver = true,
                 alVolver = { navController.popBackStack() }
             )

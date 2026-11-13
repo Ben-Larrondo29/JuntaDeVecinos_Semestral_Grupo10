@@ -1,4 +1,4 @@
-qpackage com.example.juntavecinos.model
+package com.example.juntavecinos.model
 
 // Estado del formulario de reserva
 data class EstadoReserva(
